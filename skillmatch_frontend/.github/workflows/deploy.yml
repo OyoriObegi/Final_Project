@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Angular App to GitHub Pages
 
 on:
   push:
@@ -8,32 +8,32 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: skillmatch_frontend
+
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
 
-      - name: Install pnpm
+      - name: 🟣 Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: ./skillmatch_frontend
 
-      - name: Build
+      - name: 🏗️ Build Angular (prod)
         run: pnpm run build:prod
+        working-directory: ./skillmatch_frontend
 
-      - name: Deploy to GitHub Pages
+      - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist/skillmatch_frontend/browser
-          commit_message: "Deploy: ${{ github.event.head_commit.message }}" 
+          publish_dir: ./skillmatch_frontend/dist/skillmatch_frontend
+          commit_message: "Deploy: ${{ github.event.head_commit.message }}"
