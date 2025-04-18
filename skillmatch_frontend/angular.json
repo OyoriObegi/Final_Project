@@ -62,7 +62,7 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/skillmatch_frontend/"
+              "baseHref": "/Final_Project/"
             },
             "development": {
               "buildOptimizer": false,
