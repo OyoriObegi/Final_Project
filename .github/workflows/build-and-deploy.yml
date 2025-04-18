@@ -1,0 +1,57 @@
+name: Build and Deploy Angular App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_OPTIONS: --max_old_space_size=4096
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: skillmatch_frontend/package-lock.json
+
+      - name: Clean Install
+        working-directory: ./skillmatch_frontend
+        run: |
+          echo "Cleaning previous installation..."
+          rm -rf node_modules
+          rm -f package-lock.json
+          
+          echo "Installing dependencies..."
+          npm install --legacy-peer-deps --timeout=600000
+          
+          echo "Verifying installation..."
+          npm list --depth=0 || true
+          npm cache clean --force
+
+      - name: Build
+        working-directory: ./skillmatch_frontend
+        run: |
+          echo "Building application..."
+          npm run build:prod
+          
+          # Verify build output
+          if [ ! -d "dist/skillmatch_frontend" ]; then
+            echo "Build failed - dist directory not found"
+            exit 1
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./skillmatch_frontend/dist/skillmatch_frontend
+          publish_branch: gh-pages
+          commit_message: "Deploy: ${{ github.event.head_commit.message }}" 
