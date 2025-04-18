@@ -1,0 +1,30 @@
+<app-navbar></app-navbar>
+
+<div class="container py-5">
+  <h2 class="mb-4 text-center">Explore Open Opportunities</h2>
+
+  <div class="row">
+    <div class="col-md-4 mb-4" *ngFor="let job of jobs">
+      <a [routerLink]="['/job', job.id]" style="text-decoration: none; color: inherit;">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ job.title }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">{{ job.company }}</h6>
+            <p class="card-text">
+              <strong>Location:</strong> {{ job.location }}
+            </p>
+            <div>
+              <span 
+                class="badge bg-primary me-1" 
+                *ngFor="let tag of job.tags">
+                {{ tag }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

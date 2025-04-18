@@ -1,0 +1,108 @@
+.post-job-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 2rem 0;
+
+  .card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-title {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #2c3e50;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+
+    &:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    }
+
+    &.is-invalid {
+      border-color: #dc3545;
+    }
+  }
+
+  .invalid-feedback {
+    font-size: 0.875rem;
+  }
+
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 20px;
+
+      .btn-close {
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+        opacity: 0.8;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .btn-primary {
+    background-color: #4a90e2;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #357abd;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-outline-secondary {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #6c757d;
+      color: white;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 1rem;
+    }
+
+    .card {
+      margin: 0;
+    }
+  }
+}

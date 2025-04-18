@@ -1,0 +1,25 @@
+.hero {
+    background: linear-gradient(to right, #f2f8ff, #ffffff);
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+.hero h1 {
+    color: #1e3a8a;
+}
+
+.features mat-icon {
+    transform: scale(1.5);
+    color: #0d6efd;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+
+}
+
+.testimonials blockquote {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-left: 5px solid #0d6efd;
+    font-style: italic;
+    height: 100%;
+}

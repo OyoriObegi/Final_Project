@@ -1,0 +1,48 @@
+/* Table styles */
+.table tbody tr td,
+.table thead tr th {
+  padding: 0.5rem;
+  background-color: var(--bs-table-bg);
+  border-bottom-width: 1px;
+  box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+}
+
+/* Form floating styles */
+.form-floating label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 0.75rem;
+  pointer-events: none;
+  border: 1px solid transparent;
+  transform-origin: 0 0;
+  transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+}
+
+/* Button group styles */
+.btn-group .btn:not(:first-child),
+.btn-group .btn-group:not(:first-child) {
+  margin-left: -1px;
+}
+
+.btn-group-vertical .btn:not(:first-child),
+.btn-group-vertical .btn-group:not(:first-child) {
+  margin-top: -1px;
+}
+
+/* Table variants */
+.table-bordered tbody tr td,
+.table-bordered thead tr th {
+  border-width: 1px;
+}
+
+.table-sm tbody tr td,
+.table-sm thead tr th {
+  padding: 0.25rem;
+}
+
+.table-borderless tbody tr td {
+  border-bottom-width: 0;
+} 

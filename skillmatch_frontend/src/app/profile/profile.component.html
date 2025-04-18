@@ -1,0 +1,231 @@
+<div class="profile-container">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Profile Management</h2>
+            
+            <div class="container mt-4">
+              <h2>Profile Settings</h2>
+              <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="needs-validation">
+                <!-- Common Fields -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    formControlName="email"
+                    [ngClass]="{'is-invalid': profileForm.get('email')?.invalid && profileForm.get('email')?.touched}"
+                  >
+                  <div class="invalid-feedback">
+                    {{ getErrorMessage('email') }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="phone"
+                    formControlName="phone"
+                    [ngClass]="{'is-invalid': profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched}"
+                  >
+                  <div class="invalid-feedback">
+                    {{ getErrorMessage('phone') }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="location" class="form-label">Location</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="location"
+                    formControlName="location"
+                    [ngClass]="{'is-invalid': profileForm.get('location')?.invalid && profileForm.get('location')?.touched}"
+                  >
+                  <div class="invalid-feedback">
+                    {{ getErrorMessage('location') }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="bio" class="form-label">Bio</label>
+                  <textarea
+                    class="form-control"
+                    id="bio"
+                    rows="3"
+                    formControlName="bio"
+                    [ngClass]="{'is-invalid': profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched}"
+                  ></textarea>
+                  <div class="form-text">{{ profileForm.get('bio')?.value?.length || 0 }}/500 characters</div>
+                  <div class="invalid-feedback">
+                    {{ getErrorMessage('bio') }}
+                  </div>
+                </div>
+
+                <!-- Job Seeker Fields -->
+                <div *ngIf="isJobSeeker()" class="job-seeker-fields">
+                  <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="firstName"
+                      formControlName="firstName"
+                      [ngClass]="{'is-invalid': profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched}"
+                    >
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('firstName') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="lastName"
+                      formControlName="lastName"
+                      [ngClass]="{'is-invalid': profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched}"
+                    >
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('lastName') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="experience" class="form-label">Experience</label>
+                    <textarea
+                      class="form-control"
+                      id="experience"
+                      rows="3"
+                      formControlName="experience"
+                      [ngClass]="{'is-invalid': profileForm.get('experience')?.invalid && profileForm.get('experience')?.touched}"
+                    ></textarea>
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('experience') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="education" class="form-label">Education</label>
+                    <textarea
+                      class="form-control"
+                      id="education"
+                      rows="3"
+                      formControlName="education"
+                      [ngClass]="{'is-invalid': profileForm.get('education')?.invalid && profileForm.get('education')?.touched}"
+                    ></textarea>
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('education') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Employer Fields -->
+                <div *ngIf="isEmployer()" class="employer-fields">
+                  <div class="mb-3">
+                    <label for="companyName" class="form-label">Company Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="companyName"
+                      formControlName="companyName"
+                      [ngClass]="{'is-invalid': profileForm.get('companyName')?.invalid && profileForm.get('companyName')?.touched}"
+                    >
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('companyName') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="companyWebsite" class="form-label">Company Website</label>
+                    <input
+                      type="url"
+                      class="form-control"
+                      id="companyWebsite"
+                      formControlName="companyWebsite"
+                      [ngClass]="{'is-invalid': profileForm.get('companyWebsite')?.invalid && profileForm.get('companyWebsite')?.touched}"
+                    >
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('companyWebsite') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="companySize" class="form-label">Company Size</label>
+                    <select
+                      class="form-select"
+                      id="companySize"
+                      formControlName="companySize"
+                      [ngClass]="{'is-invalid': profileForm.get('companySize')?.invalid && profileForm.get('companySize')?.touched}"
+                    >
+                      <option value="">Select company size</option>
+                      <option value="1-10">1-10 employees</option>
+                      <option value="11-50">11-50 employees</option>
+                      <option value="51-200">51-200 employees</option>
+                      <option value="201-500">201-500 employees</option>
+                      <option value="501+">501+ employees</option>
+                    </select>
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('companySize') }}
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="industry" class="form-label">Industry</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="industry"
+                      formControlName="industry"
+                      [ngClass]="{'is-invalid': profileForm.get('industry')?.invalid && profileForm.get('industry')?.touched}"
+                    >
+                    <div class="invalid-feedback">
+                      {{ getErrorMessage('industry') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="mb-3">
+                  <label class="form-label">Skills</label>
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="newSkill"
+                      [ngModelOptions]="{standalone: true}"
+                      placeholder="Add a skill"
+                    >
+                    <button type="button" class="btn btn-primary" (click)="addSkill()">Add</button>
+                  </div>
+                  <div class="mt-2">
+                    <span *ngFor="let skill of skills" class="badge bg-primary me-2 mb-2">
+                      {{ skill }}
+                      <button type="button" class="btn-close btn-close-white ms-2" (click)="removeSkill(skill)"></button>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="profileForm.invalid || isSubmitting"
+                >
+                  <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ isSubmitting ? 'Saving...' : 'Save Profile' }}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

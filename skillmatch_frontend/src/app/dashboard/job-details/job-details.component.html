@@ -1,0 +1,68 @@
+<div class="job-details-container">
+  <div class="container py-5">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading job details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMessage" class="error-state">
+      <div class="alert alert-danger" role="alert">
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- Job Details -->
+    <div *ngIf="!isLoading && !errorMessage && job" class="job-details-card">
+      <div class="job-header">
+        <h2>{{ job.jobTitle }}</h2>
+        <div class="job-meta">
+          <span class="job-type">{{ job.jobType }}</span>
+          <span class="location">{{ job.location }}</span>
+          <span class="experience">{{ job.experienceLevel }}</span>
+        </div>
+      </div>
+
+      <div class="job-content">
+        <div class="job-description">
+          <h3>Job Description</h3>
+          <p>{{ job.jobDescription }}</p>
+        </div>
+
+        <div class="job-requirements">
+          <h3>Required Skills</h3>
+          <div class="skills">
+            <span *ngFor="let skill of job.requiredSkills" class="skill-badge">
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+
+        <div class="job-actions">
+          <button *ngIf="userRole === 'jobseeker'" 
+                  class="btn btn-primary" 
+                  (click)="applyForJob()">
+            Apply Now
+          </button>
+          <button *ngIf="userRole === 'employer'" 
+                  class="btn btn-outline-secondary" 
+                  (click)="editJob()">
+            Edit Job
+          </button>
+          <button *ngIf="userRole === 'employer'" 
+                  class="btn btn-danger" 
+                  (click)="deleteJob()">
+            Delete Job
+          </button>
+          <button class="btn btn-outline-primary" 
+                  (click)="goBack()">
+            Back to Jobs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

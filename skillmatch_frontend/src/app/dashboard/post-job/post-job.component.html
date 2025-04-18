@@ -1,0 +1,179 @@
+<div class="post-job-container">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Post a New Job</h2>
+            
+            <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+              <!-- Basic Information -->
+              <div class="mb-3">
+                <label for="jobTitle" class="form-label">Job Title</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="jobTitle" 
+                  formControlName="jobTitle"
+                  [ngClass]="{'is-invalid': jobForm.get('jobTitle')?.invalid && jobForm.get('jobTitle')?.touched}">
+                <div class="invalid-feedback" *ngIf="jobForm.get('jobTitle')?.invalid && jobForm.get('jobTitle')?.touched">
+                  Job title is required and must be at least 5 characters long
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="jobDescription" class="form-label">Job Description</label>
+                <textarea 
+                  class="form-control" 
+                  id="jobDescription" 
+                  formControlName="jobDescription"
+                  rows="4"
+                  [ngClass]="{'is-invalid': jobForm.get('jobDescription')?.invalid && jobForm.get('jobDescription')?.touched}"></textarea>
+                <div class="invalid-feedback" *ngIf="jobForm.get('jobDescription')?.invalid && jobForm.get('jobDescription')?.touched">
+                  Job description is required and must be at least 50 characters long
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="jobType" class="form-label">Job Type</label>
+                  <select 
+                    class="form-select" 
+                    id="jobType" 
+                    formControlName="jobType"
+                    [ngClass]="{'is-invalid': jobForm.get('jobType')?.invalid && jobForm.get('jobType')?.touched}">
+                    <option *ngFor="let type of jobTypes" [value]="type.value">{{type.label}}</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="experienceLevel" class="form-label">Experience Level</label>
+                  <select 
+                    class="form-select" 
+                    id="experienceLevel" 
+                    formControlName="experienceLevel"
+                    [ngClass]="{'is-invalid': jobForm.get('experienceLevel')?.invalid && jobForm.get('experienceLevel')?.touched}">
+                    <option *ngFor="let level of experienceLevels" [value]="level.value">{{level.label}}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="location" class="form-label">Location</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="location" 
+                    formControlName="location"
+                    [ngClass]="{'is-invalid': jobForm.get('location')?.invalid && jobForm.get('location')?.touched}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="salary" class="form-label">Salary (Optional)</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="salary" 
+                    formControlName="salary"
+                    placeholder="e.g., $50,000 - $70,000">
+                </div>
+              </div>
+
+              <!-- Required Skills -->
+              <div class="mb-3">
+                <label class="form-label">Required Skills</label>
+                <div class="input-group">
+                  <input type="text" 
+                         class="form-control" 
+                         placeholder="Add a skill" 
+                         formControlName="currentSkill"
+                         (keyup.enter)="addSkill()">
+                  <button class="btn btn-outline-secondary" 
+                          type="button" 
+                          (click)="addSkill()">
+                    Add
+                  </button>
+                </div>
+                <div class="skills-container mt-2">
+                  <span class="badge bg-primary me-2 mb-2" 
+                        *ngFor="let skill of skills">
+                    {{ skill }}
+                    <button type="button" 
+                            class="btn-close btn-close-white ms-2" 
+                            (click)="removeSkill(skill)"></button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Responsibilities -->
+              <div class="mb-3">
+                <label for="keyResponsibilities" class="form-label">Key Responsibilities</label>
+                <textarea 
+                  class="form-control" 
+                  id="keyResponsibilities" 
+                  formControlName="keyResponsibilities"
+                  rows="4"
+                  [ngClass]="{'is-invalid': jobForm.get('keyResponsibilities')?.invalid && jobForm.get('keyResponsibilities')?.touched}"></textarea>
+                <div class="invalid-feedback" *ngIf="jobForm.get('keyResponsibilities')?.invalid && jobForm.get('keyResponsibilities')?.touched">
+                  Key responsibilities are required
+                </div>
+              </div>
+
+              <!-- Qualifications -->
+              <div class="mb-3">
+                <label for="qualifications" class="form-label">Qualifications</label>
+                <textarea 
+                  class="form-control" 
+                  id="qualifications" 
+                  formControlName="qualifications"
+                  rows="4"
+                  [ngClass]="{'is-invalid': jobForm.get('qualifications')?.invalid && jobForm.get('qualifications')?.touched}"></textarea>
+                <div class="invalid-feedback" *ngIf="jobForm.get('qualifications')?.invalid && jobForm.get('qualifications')?.touched">
+                  Qualifications are required
+                </div>
+              </div>
+
+              <!-- Benefits -->
+              <div class="mb-3">
+                <label for="benefits" class="form-label">Benefits (Optional)</label>
+                <textarea 
+                  class="form-control" 
+                  id="benefits" 
+                  formControlName="benefits"
+                  rows="3"></textarea>
+              </div>
+
+              <!-- Application Deadline -->
+              <div class="mb-4">
+                <label for="applicationDeadline" class="form-label">Application Deadline</label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="applicationDeadline" 
+                  formControlName="applicationDeadline"
+                  [ngClass]="{'is-invalid': jobForm.get('applicationDeadline')?.invalid && jobForm.get('applicationDeadline')?.touched}">
+                <div class="invalid-feedback" *ngIf="jobForm.get('applicationDeadline')?.invalid && jobForm.get('applicationDeadline')?.touched">
+                  Application deadline is required
+                </div>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="button" 
+                        class="btn btn-outline-secondary me-2" 
+                        (click)="onCancel()">
+                  Cancel
+                </button>
+                <button type="submit" 
+                        class="btn btn-primary" 
+                        [disabled]="jobForm.invalid || skills.length === 0">
+                  Post Job
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

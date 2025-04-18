@@ -1,0 +1,22 @@
+.job-details-container {
+  .job-header {
+    background-color: var(--bs-light);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+  }
+
+  .job-content {
+    .skills-list {
+      .badge {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+
+  .application-section {
+    background-color: var(--bs-light);
+    padding: 2rem;
+    border-radius: 0.5rem;
+  }
+} 

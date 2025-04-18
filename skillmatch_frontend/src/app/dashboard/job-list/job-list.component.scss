@@ -1,0 +1,87 @@
+.job-list-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 2rem 0;
+
+  .card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease-in-out;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.9rem;
+    }
+
+    .card-text {
+      color: #6c757d;
+      margin-bottom: 1rem;
+    }
+
+    .tags {
+      .badge {
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+      }
+    }
+
+    .btn-primary {
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .job-list-container {
+    padding: 1rem 0;
+
+    .card {
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.job-card {
+  transition: transform 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  .job-title {
+    color: var(--bs-primary);
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .job-meta {
+    color: var(--bs-secondary);
+    font-size: 0.9rem;
+  }
+
+  .skills-list {
+    .badge {
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+} 

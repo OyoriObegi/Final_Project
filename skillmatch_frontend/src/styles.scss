@@ -1,0 +1,60 @@
+/* You can add global styles to this file, and also import other style files */
+@use "bootstrap/scss/bootstrap" as *;
+
+/* Fix for Bootstrap CSS selector warnings */
+.table {
+  > :not(caption) > * > * {
+    padding: 0.5rem;
+  }
+}
+
+.table-sm {
+  > :not(caption) > * > * {
+    padding: 0.25rem;
+  }
+}
+
+.table-bordered {
+  > :not(caption) > * {
+    border-width: 1px 0;
+  }
+  > :not(caption) > * > * {
+    border-width: 0 1px;
+  }
+}
+
+.table-borderless {
+  > :not(caption) > * > * {
+    border-bottom-width: 0;
+  }
+}
+
+.form-floating {
+  > label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 1rem 0.75rem;
+    pointer-events: none;
+    border: 1px solid transparent;
+    transform-origin: 0 0;
+    transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+  }
+}
+
+.btn-group {
+  > .btn:not(:first-child) {
+    margin-left: -1px;
+  }
+}
+
+.btn-group-vertical {
+  > .btn:not(:first-child) {
+    margin-top: -1px;
+  }
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

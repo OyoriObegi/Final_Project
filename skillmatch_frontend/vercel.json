@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build:ssr",
+  "outputDirectory": "dist/skillmatch-frontend",
+  "builds": [
+    {
+      "src": "dist/skillmatch-frontend/server/main.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "dist/skillmatch-frontend/browser/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "dist/skillmatch-frontend/browser/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "dist/skillmatch-frontend/browser/favicon.ico"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "dist/skillmatch-frontend/server/main.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
