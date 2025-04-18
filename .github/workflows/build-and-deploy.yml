@@ -48,7 +48,7 @@ jobs:
           npm run build:prod
           
           # Verify build output
-          if [ ! -d "dist/skillmatch_frontend" ]; then
+          if [ ! -d "dist/skillmatch_frontend/browser" ]; then
             echo "Build failed - dist directory not found"
             exit 1
           fi
@@ -59,7 +59,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './skillmatch_frontend/dist/skillmatch_frontend'
+          path: './skillmatch_frontend/dist/skillmatch_frontend/browser'
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4 
