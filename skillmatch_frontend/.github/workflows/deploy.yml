@@ -17,23 +17,24 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      - name: 🟣 Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          cache: 'npm'
+          cache-dependency-path: skillmatch_frontend/package-lock.json
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: ./skillmatch_frontend
+        run: |
+          cd skillmatch_frontend
+          npm config set fetch-retries 3
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          npm install --legacy-peer-deps
 
       - name: 🏗️ Build Angular (prod)
-        run: pnpm run build:prod
+        run: npm run build:prod
         working-directory: ./skillmatch_frontend
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./skillmatch_frontend/dist/skillmatch_frontend
+          publish_dir: ./skillmatch_frontend/dist/skillmatch_frontend/browser
           commit_message: "Deploy: ${{ github.event.head_commit.message }}"
