@@ -1,105 +1,116 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { BaseController } from './base.controller';
+import { Job } from '../entities/Job';
 import { JobService } from '../services/job.service';
-import { AuthRequest } from '../types/auth';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import AppDataSource from '../config/database';
+import { UserRole } from '../entities/User';
 
-export class JobController {
-  private jobService: JobService;
+export class JobController extends BaseController<Job> {
+    private jobRepository = AppDataSource.getRepository(Job);
 
-  constructor() {
-    this.jobService = new JobService();
-  }
-
-  async createJob(req: AuthRequest, res: Response) {
-    try {
-      const jobData = {
-        ...req.body,
-        postedBy: req.user.email,
-        postedDate: new Date().toISOString()
-      };
-
-      const job = await this.jobService.createJob(jobData);
-      res.status(201).json({ status: 'success', data: job });
-    } catch (error) {
-      console.error('Error creating job:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to create job' });
+    constructor(jobService: JobService) {
+        super(jobService);
     }
-  }
 
-  async updateJob(req: AuthRequest, res: Response) {
-    try {
-      const jobId = parseInt(req.params.id);
-      const job = await this.jobService.getJobById(jobId);
+    public createJob = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            if (!req.user || req.user.role !== UserRole.RECRUITER) {
+                this.sendError(res, 403, 'Only recruiters can create jobs');
+                return;
+            }
 
-      if (!job) {
-        return res.status(404).json({ status: 'error', message: 'Job not found' });
-      }
+            const jobData = { ...req.body, employer: req.user };
+            const job = this.jobRepository.create(jobData);
+            await this.jobRepository.save(job);
 
-      if (job.postedBy !== req.user.email) {
-        return res.status(403).json({ status: 'error', message: 'Not authorized to update this job' });
-      }
+            this.sendResponse(res, 201, true, 'Job created successfully', job);
+        } catch (error) {
+            next(error);
+        }
+    };
 
-      const updatedJob = await this.jobService.updateJob(jobId, req.body);
-      res.json({ status: 'success', data: updatedJob });
-    } catch (error) {
-      console.error('Error updating job:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to update job' });
-    }
-  }
+    public updateJob = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const job = await this.jobRepository.findOne({ 
+                where: { id },
+                relations: ['employer']
+            });
 
-  async deleteJob(req: AuthRequest, res: Response) {
-    try {
-      const jobId = parseInt(req.params.id);
-      const job = await this.jobService.getJobById(jobId);
+            if (!job) {
+                this.sendError(res, 404, 'Job not found');
+                return;
+            }
 
-      if (!job) {
-        return res.status(404).json({ status: 'error', message: 'Job not found' });
-      }
+            if (!req.user || (job.employer.id !== req.user.id && req.user.role !== UserRole.ADMIN)) {
+                this.sendError(res, 403, 'Unauthorized to update this job');
+                return;
+            }
 
-      if (job.postedBy !== req.user.email) {
-        return res.status(403).json({ status: 'error', message: 'Not authorized to delete this job' });
-      }
+            this.jobRepository.merge(job, req.body);
+            await this.jobRepository.save(job);
 
-      await this.jobService.deleteJob(jobId);
-      res.json({ status: 'success', message: 'Job deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting job:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to delete job' });
-    }
-  }
+            this.sendResponse(res, 200, true, 'Job updated successfully', job);
+        } catch (error) {
+            next(error);
+        }
+    };
 
-  async getJob(req: Request, res: Response) {
-    try {
-      const jobId = parseInt(req.params.id);
-      const job = await this.jobService.getJobById(jobId);
+    public deleteJob = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const job = await this.jobRepository.findOne({
+                where: { id },
+                relations: ['employer']
+            });
 
-      if (!job) {
-        return res.status(404).json({ status: 'error', message: 'Job not found' });
-      }
+            if (!job) {
+                this.sendError(res, 404, 'Job not found');
+                return;
+            }
 
-      res.json({ status: 'success', data: job });
-    } catch (error) {
-      console.error('Error getting job:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to get job' });
-    }
-  }
+            if (!req.user || (job.employer.id !== req.user.id && req.user.role !== UserRole.ADMIN)) {
+                this.sendError(res, 403, 'Unauthorized to delete this job');
+                return;
+            }
 
-  async searchJobs(req: Request, res: Response) {
-    try {
-      const jobs = await this.jobService.getJobs(req.query);
-      res.json({ status: 'success', data: jobs });
-    } catch (error) {
-      console.error('Error searching jobs:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to search jobs' });
-    }
-  }
+            await this.jobRepository.remove(job);
+            this.sendResponse(res, 200, true, 'Job deleted successfully');
+        } catch (error) {
+            next(error);
+        }
+    };
 
-  async getEmployerJobs(req: AuthRequest, res: Response) {
-    try {
-      const jobs = await this.jobService.getEmployerJobs(req.user.email);
-      res.json({ status: 'success', data: jobs });
-    } catch (error) {
-      console.error('Error getting employer jobs:', error);
-      res.status(500).json({ status: 'error', message: 'Failed to get employer jobs' });
-    }
-  }
+    public getJob = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const job = await this.jobRepository.findOne({
+                where: { id },
+                relations: ['employer', 'skills']
+            });
+
+            if (!job) {
+                this.sendError(res, 404, 'Job not found');
+                return;
+            }
+
+            this.sendResponse(res, 200, true, 'Job retrieved successfully', job);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public getAllJobs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const jobs = await this.jobRepository.find({
+                relations: ['employer', 'skills'],
+                order: { createdAt: 'DESC' }
+            });
+
+            this.sendResponse(res, 200, true, 'Jobs retrieved successfully', jobs);
+        } catch (error) {
+            next(error);
+        }
+    };
 } 

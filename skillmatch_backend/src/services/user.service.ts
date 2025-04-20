@@ -1,160 +1,165 @@
-import bcrypt from 'bcrypt';
+import { getRepository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UserRepository } from '../repositories/user.repository';
-import { User, UserRole, CreateUserRequest } from '../types';
-import { ApiResponse } from '../types';
+import { User, UserRole, UserStatus } from '../entities/User';
+import { BaseService } from './base.service';
+import { AuthenticationError, ValidationError } from '../middleware/error.middleware';
+import AppDataSource from '../config/database';
+import { config } from '../config';
 
-export class UserService {
-  private userRepository: UserRepository;
-  private readonly JWT_SECRET: string;
-  private readonly JWT_EXPIRES_IN: string;
+interface RegisterDTO {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  company?: string;
+  position?: string;
+}
 
-  constructor(userRepository: UserRepository) {
-    this.userRepository = userRepository;
-    this.JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-    this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+interface LoginDTO {
+  email: string;
+  password: string;
+}
+
+interface UpdateProfileDTO {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+  company?: string;
+  position?: string;
+}
+
+export class UserService extends BaseService<User> {
+  constructor() {
+    super(AppDataSource.getRepository(User));
+  }
+
+  async register(data: RegisterDTO): Promise<User> {
+    const existingUser = await this.repository.findOne({ where: { email: data.email } });
+    if (existingUser) {
+      throw new ValidationError('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const userData: DeepPartial<User> = {
+      ...data,
+      password: hashedPassword,
+      status: UserStatus.PENDING,
+      emailVerified: false,
+      verifiedAt: undefined,
+      lastLoginAt: undefined,
+      suspendedAt: undefined,
+      loginCount: 0,
+      isActive: true
+    };
+
+    const user = this.repository.create(userData);
+    return this.repository.save(user);
+  }
+
+  async login(data: LoginDTO): Promise<{ user: User; token: string }> {
+    const user = await this.repository.findOne({
+      where: { email: data.email },
+      select: ['id', 'email', 'password', 'role', 'status']
+    });
+
+    if (!user) {
+      throw new AuthenticationError('Invalid credentials');
+    }
+
+    const isValidPassword = await bcrypt.compare(data.password, user.password);
+    if (!isValidPassword) {
+      throw new AuthenticationError('Invalid credentials');
+    }
+
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new AuthenticationError('Account is not active');
+    }
+
+    // Update login info
+    user.lastLoginAt = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await this.repository.save(user);
+
+    const token = this.generateToken(user);
+
+    return { user, token };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDTO): Promise<User> {
+    const user = await this.repository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ValidationError('User not found');
+    }
+    
+    Object.assign(user, data);
+    return this.repository.save(user);
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<User> {
+    const user = await this.repository.findOne({ where: { id: userId }, select: ['id', 'password'] });
+    if (!user) {
+      throw new ValidationError('User not found');
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      throw new ValidationError('Current password is incorrect');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    return this.repository.save(user);
+  }
+
+  async verifyEmail(userId: string): Promise<User> {
+    const user = await this.repository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ValidationError('User not found');
+    }
+
+    user.emailVerified = true;
+    user.verifiedAt = new Date();
+    return this.repository.save(user);
   }
 
   private generateToken(user: User): string {
     return jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      this.JWT_SECRET,
-      { expiresIn: this.JWT_EXPIRES_IN }
+      { id: user.id, role: user.role },
+      config.jwtSecret,
+      { expiresIn: '24h' }
     );
   }
 
-  async register(userData: CreateUserRequest): Promise<ApiResponse<{ user: User; token: string }>> {
-    try {
-      // Check if user already exists
-      const existingUser = await this.userRepository.findByEmail(userData.email);
-      if (existingUser) {
-        return { success: false, error: 'Email already registered' };
+  async findUsers(filters: { role?: UserRole; status?: UserStatus; isActive?: boolean }): Promise<User[]> {
+    return this.repository.find({
+      where: {
+        ...(filters.role && { role: filters.role }),
+        ...(filters.status && { status: filters.status }),
+        ...(typeof filters.isActive === 'boolean' && { isActive: filters.isActive })
       }
-
-      // Hash password
-      const passwordHash = await bcrypt.hash(userData.password, 10);
-
-      // Create user
-      const user = await this.userRepository.create({
-        ...userData,
-        password_hash: passwordHash,
-      });
-
-      // Generate token
-      const token = this.generateToken(user);
-
-      return { success: true, data: { user, token } };
-    } catch (error) {
-      console.error('Error in register:', error);
-      return { success: false, error: 'Failed to register user' };
-    }
+    });
   }
 
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
-    try {
-      const user = await this.userRepository.findByEmail(email);
-      if (!user) {
-        return { success: false, error: 'Invalid email or password' };
-      }
-
-      const isValidPassword = await bcrypt.compare(password, user.password_hash);
-      if (!isValidPassword) {
-        return { success: false, error: 'Invalid email or password' };
-      }
-
-      const token = this.generateToken(user);
-      return { success: true, data: { user, token } };
-    } catch (error) {
-      console.error('Error in login:', error);
-      return { success: false, error: 'Failed to login' };
+  async toggleUserStatus(userId: string): Promise<User> {
+    const user = await this.repository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ValidationError('User not found');
     }
+
+    user.isActive = !user.isActive;
+    user.status = user.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE;
+    return this.repository.save(user);
   }
 
-  async updateProfile(userId: number, data: Partial<User>): Promise<ApiResponse<User>> {
-    try {
-      const user = await this.userRepository.update(userId, data);
-      if (!user) {
-        return { success: false, error: 'User not found' };
-      }
-      return { success: true, data: user };
-    } catch (error) {
-      console.error('Error in updateProfile:', error);
-      return { success: false, error: 'Failed to update profile' };
+  async changeUserRole(userId: string, newRole: UserRole): Promise<User> {
+    const user = await this.repository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ValidationError('User not found');
     }
-  }
 
-  async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<ApiResponse<boolean>> {
-    try {
-      const user = await this.userRepository.findById(userId);
-      if (!user) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
-      if (!isValidPassword) {
-        return { success: false, error: 'Current password is incorrect' };
-      }
-
-      const newPasswordHash = await bcrypt.hash(newPassword, 10);
-      const updated = await this.userRepository.updatePassword(userId, newPasswordHash);
-
-      return { success: updated, data: updated };
-    } catch (error) {
-      console.error('Error in changePassword:', error);
-      return { success: false, error: 'Failed to change password' };
-    }
-  }
-
-  async getUserSkills(userId: number): Promise<ApiResponse<{ skill_id: number; name: string; proficiency_level: number }[]>> {
-    try {
-      const skills = await this.userRepository.getUserSkills(userId);
-      return { success: true, data: skills };
-    } catch (error) {
-      console.error('Error in getUserSkills:', error);
-      return { success: false, error: 'Failed to get user skills' };
-    }
-  }
-
-  async updateUserSkills(
-    userId: number,
-    skills: { skill_id: number; proficiency_level: number }[]
-  ): Promise<ApiResponse<boolean>> {
-    try {
-      // Remove existing skills
-      const existingSkills = await this.userRepository.getUserSkills(userId);
-      for (const skill of existingSkills) {
-        await this.userRepository.removeUserSkill(userId, skill.skill_id);
-      }
-
-      // Add new skills
-      for (const skill of skills) {
-        await this.userRepository.addUserSkill(userId, skill.skill_id, skill.proficiency_level);
-      }
-
-      return { success: true, data: true };
-    } catch (error) {
-      console.error('Error in updateUserSkills:', error);
-      return { success: false, error: 'Failed to update user skills' };
-    }
-  }
-
-  async getEmployerDashboard(employerId: number): Promise<ApiResponse<any>> {
-    try {
-      const jobs = await this.userRepository.getEmployerJobs(employerId);
-      return { success: true, data: jobs };
-    } catch (error) {
-      console.error('Error in getEmployerDashboard:', error);
-      return { success: false, error: 'Failed to get employer dashboard' };
-    }
-  }
-
-  async getJobSeekerDashboard(userId: number): Promise<ApiResponse<any>> {
-    try {
-      const applications = await this.userRepository.getJobSeekerApplications(userId);
-      return { success: true, data: applications };
-    } catch (error) {
-      console.error('Error in getJobSeekerDashboard:', error);
-      return { success: false, error: 'Failed to get job seeker dashboard' };
-    }
+    user.role = newRole;
+    return this.repository.save(user);
   }
 } 

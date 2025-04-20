@@ -1,19 +1,23 @@
 import { Router } from 'express';
 import { JobController } from '../controllers/job.controller';
+import { JobService } from '../services/job.service';
 import { authenticate, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../entities/User';
 
 const router = Router();
-const jobController = new JobController();
+const jobService = new JobService();
+const jobController = new JobController(jobService);
 
 // Public routes
-router.get('/search', jobController.searchJobs.bind(jobController));
-router.get('/:id', jobController.getJob.bind(jobController));
+router.get('/', jobController.getAllJobs);
+router.get('/:id', jobController.getJob);
 
-// Protected routes
+// Protected routes (requires authentication)
 router.use(authenticate);
-router.post('/', authorize(['employer']), jobController.createJob.bind(jobController));
-router.put('/:id', authorize(['employer']), jobController.updateJob.bind(jobController));
-router.delete('/:id', authorize(['employer']), jobController.deleteJob.bind(jobController));
-router.get('/employer/jobs', authorize(['employer']), jobController.getEmployerJobs.bind(jobController));
+
+// Recruiter only routes
+router.post('/', authorize(UserRole.RECRUITER), jobController.createJob);
+router.put('/:id', authorize(UserRole.RECRUITER), jobController.updateJob);
+router.delete('/:id', authorize(UserRole.RECRUITER), jobController.deleteJob);
 
 export default router; 

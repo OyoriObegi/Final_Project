@@ -1,0 +1,11 @@
+applications:
+- name: skillmatch-api
+  memory: 256M
+  instances: 1
+  buildpack: nodejs_buildpack
+  command: npm run start
+  env:
+    NODE_ENV: production
+  services:
+    - skillmatch-db
+    - skillmatch-ai 

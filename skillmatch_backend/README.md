@@ -1,152 +1,182 @@
 # SkillMatch Backend
 
-Backend API for the SkillMatch AI platform, built with Node.js, Express, and PostgreSQL.
+A robust backend service for the SkillMatch platform, providing job matching and skill assessment functionality.
 
 ## Features
 
-- User authentication and authorization
-- Job posting and management
-- Job application tracking
-- Skill matching and recommendations
-- Portfolio management
-- AI-powered resume analysis
-- Career path suggestions
+- **User Management**
+  - Authentication and authorization
+  - Profile management
+  - Role-based access control (User, Employer, Admin)
+
+- **Job Management**
+  - Job posting and search
+  - Application handling
+  - Status tracking
+  - Skill requirements matching
+
+- **Skill Management**
+  - Skill creation and verification
+  - Skill categorization
+  - Assessment criteria
+  - Usage tracking
+  - Related skills suggestion
+
+- **Application Management**
+  - Application submission
+  - Status tracking
+  - Document handling
+  - Communication
+
+## Tech Stack
+
+- Node.js
+- TypeScript
+- Express.js
+- PostgreSQL
+- TypeORM
+- JWT Authentication
+- Redis (optional)
+- AWS S3 (optional)
 
 ## Prerequisites
 
-- Node.js (>=14.0.0)
-- PostgreSQL (>=12.0)
-- Google Cloud Storage account (for file uploads)
-- OpenAI API key (for AI features)
-- Google AI API key (for AI features)
+- Node.js (v14 or higher)
+- PostgreSQL (v12 or higher)
+- npm or yarn
+- Redis (optional)
+- AWS Account (optional)
 
-## Setup
+## Installation
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/skillmatch.git
-cd skillmatch/skillmatch_backend
-```
+   ```bash
+   git clone https://github.com/your-org/skillmatch-backend.git
+   cd skillmatch-backend
+   ```
 
 2. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-3. Create a `.env` file in the root directory with the following variables:
-```env
-# Server Configuration
-PORT=3000
-NODE_ENV=development
+3. Create a `.env` file in the root directory:
+   ```env
+   # Server
+   NODE_ENV=development
+   PORT=3000
+   API_PREFIX=/api
 
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=skillmatch_db
-DB_USER=postgres
-DB_PASSWORD=your_password
+   # Database
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USERNAME=postgres
+   DB_PASSWORD=your_password
+   DB_NAME=skillmatch
 
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=24h
+   # Authentication
+   JWT_SECRET=your_jwt_secret
+   JWT_EXPIRES_IN=7d
 
-# AI Services Configuration
-OPENAI_API_KEY=your_openai_api_key
-GOOGLE_AI_API_KEY=your_google_ai_api_key
+   # Email (optional)
+   SMTP_HOST=smtp.example.com
+   SMTP_PORT=587
+   SMTP_USER=your_email
+   SMTP_PASS=your_password
+   EMAIL_FROM=noreply@skillmatch.com
 
-# Storage Configuration
-GCLOUD_PROJECT_ID=your_project_id
-GCLOUD_BUCKET_NAME=your_bucket_name
-GCLOUD_KEY_FILE=path_to_your_key_file.json
+   # AWS S3 (optional)
+   AWS_ACCESS_KEY_ID=your_access_key
+   AWS_SECRET_ACCESS_KEY=your_secret_key
+   AWS_REGION=your_region
+   AWS_BUCKET_NAME=your_bucket
 
-# Email Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-```
+   # Redis (optional)
+   REDIS_URL=redis://localhost:6379
+   USE_REDIS_CACHE=false
+   ```
 
 4. Set up the database:
-```bash
-npm run migrate
-npm run seed
-```
+   ```bash
+   npm run typeorm migration:run
+   ```
 
 5. Start the development server:
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
 ## API Documentation
 
 ### Authentication
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
+- `POST /api/users/register` - Register a new user
+- `POST /api/users/login` - Login user
+- `GET /api/users/me` - Get current user profile
+- `PUT /api/users/me` - Update user profile
 
 ### Jobs
 
-- `GET /api/jobs` - Get all jobs
-- `GET /api/jobs/:id` - Get job by ID
-- `POST /api/jobs` - Create a new job (employer only)
-- `PUT /api/jobs/:id` - Update job (employer only)
-- `DELETE /api/jobs/:id` - Delete job (employer only)
+- `GET /api/jobs/search` - Search jobs
 - `GET /api/jobs/recommended` - Get recommended jobs
-
-### Applications
-
-- `POST /api/applications` - Submit job application
-- `GET /api/applications` - Get user's applications
-- `GET /api/applications/:id` - Get application details
-- `PUT /api/applications/:id/status` - Update application status
+- `POST /api/jobs` - Create a job (Employer only)
+- `PUT /api/jobs/:id/status` - Update job status (Employer only)
 
 ### Skills
 
-- `GET /api/skills` - Get all skills
+- `GET /api/skills/search` - Search skills
 - `GET /api/skills/popular` - Get popular skills
-- `POST /api/skills` - Create new skill (admin only)
-- `PUT /api/skills/user` - Update user's skills
+- `POST /api/skills` - Create skill (Admin only)
+- `PUT /api/skills/:id/verify` - Verify skill (Admin only)
 
-### Portfolio
+### Applications
 
-- `POST /api/portfolios` - Create portfolio
-- `PUT /api/portfolios/:id` - Update portfolio
-- `GET /api/portfolios` - Get user's portfolios
-- `GET /api/portfolios/:id` - Get portfolio details
-- `DELETE /api/portfolios/:id` - Delete portfolio
+- `POST /api/jobs/:id/apply` - Apply for a job
+- `GET /api/jobs/:id/applications` - Get job applications (Employer only)
+- `PUT /api/jobs/applications/:id/status` - Update application status (Employer only)
 
-### AI Services
+## Development
 
-- `POST /api/ai/analyze-resume` - Analyze resume text
-- `GET /api/ai/career-path` - Get career path suggestions
-
-## Testing
-
-Run tests using:
+### Running Tests
 ```bash
-npm test
+npm run test
 ```
 
-## Linting
-
-Check code style using:
+### Linting
 ```bash
 npm run lint
+```
+
+### Building for Production
+```bash
+npm run build
 ```
 
 ## Deployment
 
 1. Build the application:
-```bash
-npm run build
-```
+   ```bash
+   npm run build
+   ```
 
-2. Start the production server:
-```bash
-npm start
-```
+2. Set production environment variables
+
+3. Start the server:
+   ```bash
+   npm start
+   ```
+
+### Docker Deployment
+
+1. Build the Docker image:
+   ```bash
+   docker build -t skillmatch-backend .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 3000:3000 skillmatch-backend
+   ```
 
 ## Contributing
 
@@ -158,4 +188,4 @@ npm start
 
 ## License
 
-This project is licensed under the ISC License. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
