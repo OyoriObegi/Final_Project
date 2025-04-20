@@ -14,7 +14,7 @@ export const env = cleanEnv(process.env, {
   DB_PORT: port({ default: 5432 }),
   DB_USERNAME: str({ default: 'postgres' }),
   DB_PASSWORD: str(),
-  DB_NAME: str({ default: 'skillmatch' }),
+  DB_NAME: str({ default: 'skillmatch_ai' }),
   
   // Authentication
   JWT_SECRET: str(),

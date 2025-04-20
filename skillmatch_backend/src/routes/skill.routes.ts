@@ -7,7 +7,12 @@ export default function initializeSkillRoutes() {
   const SkillController = require('../controllers/skill.controller').SkillController;
   const skillController = new SkillController();
 
-  // Public routes (still requires authentication)
+  // ✅ Root route to confirm skills endpoint is live
+  router.get('/', (req, res) => {
+    res.json({ message: '✅ Skill API is live!' });
+  });
+
+  // Public routes (still requires authentication in real usage)
   router.get('/search', skillController.searchSkills);
   router.get('/popular', skillController.getPopularSkills);
   router.get('/:id', skillController.getById);
@@ -22,4 +27,4 @@ export default function initializeSkillRoutes() {
   router.post('/merge', isAdmin, skillController.mergeSkills);
 
   return router;
-} 
+}

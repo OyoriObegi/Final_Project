@@ -1,4 +1,7 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,10 +16,10 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-    origin: config.corsOrigin || '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: config.corsOrigin?.split(',') || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,65 +27,64 @@ app.use(compression());
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api', limiter);
 
-// Health check
+// Health check (safe to keep here)
 app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date(),
-        uptime: process.uptime()
-    });
+  res.json({
+    status: 'ok',
+    timestamp: new Date(),
+    uptime: process.uptime()
+  });
 });
 
-// Error handling
-app.use(errorHandler);
+// Start server
+const startServer = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log('✅ Database connection established');
 
-// Handle 404
-app.use((req, res) => {
-    res.status(404).json({
+    // ✅ Register routes *after* DB is ready
+    const initializeSkillRoutes = require('./routes/skill.routes').default;
+    app.use('/api/skills', initializeSkillRoutes());
+
+    // ✅ Now attach 404 handler
+    app.use((req, res) => {
+      res.status(404).json({
         success: false,
         message: 'Route not found'
+      });
     });
-});
 
-// Database initialization and server startup
-const startServer = async () => {
-    try {
-        await AppDataSource.initialize();
-        console.log('Database connection established successfully');
+    // ✅ Global error handler
+    app.use(errorHandler);
 
-        // Import and initialize routes after database initialization
-        const initializeSkillRoutes = require('./routes/skill.routes').default;
-        app.use('/api/skills', initializeSkillRoutes());
+    const port = config.port || 3000;
+    const host = config.host || '0.0.0.0';
 
-        const port = config.port || 3000;
-        const host = config.host || '0.0.0.0';
-        
-        app.listen(port, host, () => {
-            console.log(`Server is running on http://${host}:${port}`);
-            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-        });
-    } catch (error) {
-        console.error('Error during initialization:', error);
-        process.exit(1);
-    }
+    app.listen(port, host, () => {
+      console.log(`🚀 Server is running on http://${host}:${port}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('❌ Error during initialization:', error);
+    process.exit(1);
+  }
 };
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions and rejections
 process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
+  console.error('💥 Uncaught Exception:', error);
+  process.exit(1);
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
-startServer(); 
+startServer();

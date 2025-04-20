@@ -1,4 +1,5 @@
-import { getRepository, ILike, In } from 'typeorm';
+import { ILike, In } from 'typeorm';
+import AppDataSource from '../config/database';
 import { Skill, SkillType } from '../entities/Skill';
 import { BaseService } from './base.service';
 import { ValidationError } from '../middleware/error.middleware';
@@ -23,7 +24,7 @@ interface SkillStats {
 
 export class SkillService extends BaseService<Skill> {
   constructor() {
-    super(getRepository(Skill));
+    super(AppDataSource.getRepository(Skill));
   }
 
   async createSkill(data: Partial<Skill>): Promise<Skill> {
@@ -31,10 +32,8 @@ export class SkillService extends BaseService<Skill> {
       throw new ValidationError('Skill name is required');
     }
 
-    // Generate slug from name
     data.slug = data.name.toLowerCase().replace(/\s+/g, '-');
 
-    // Check for duplicate name or slug
     const existing = await this.repository.findOne({
       where: [
         { name: data.name },
@@ -59,7 +58,7 @@ export class SkillService extends BaseService<Skill> {
 
   async searchSkills(params: SkillSearchParams): Promise<{ skills: Skill[]; total: number }> {
     const { query, type, category, isVerified, page = 1, limit = 10 } = params;
-    
+
     const queryBuilder = this.repository.createQueryBuilder('skill');
 
     if (query) {
@@ -102,7 +101,7 @@ export class SkillService extends BaseService<Skill> {
     if (!skill) {
       throw new ValidationError('Skill not found');
     }
-    
+
     skill.metadata = {
       ...skill.metadata,
       ...metadata
@@ -117,7 +116,7 @@ export class SkillService extends BaseService<Skill> {
     if (!skill) {
       throw new ValidationError('Skill not found');
     }
-    
+
     skill.isVerified = true;
     skill.verifiedAt = new Date();
     skill.verifiedBy = adminId;
@@ -134,7 +133,6 @@ export class SkillService extends BaseService<Skill> {
       throw new ValidationError('Source or target skill not found');
     }
 
-    // Merge metadata
     target.metadata = {
       ...target.metadata,
       aliases: [...(target.metadata?.aliases || []), source.name, ...(source.metadata?.aliases || [])],
@@ -144,16 +142,10 @@ export class SkillService extends BaseService<Skill> {
       ])]
     };
 
-    // Merge keywords
     target.keywords = [...new Set([...target.keywords, ...source.keywords])];
-
-    // Update usage count
     target.usageCount += source.usageCount;
 
-    // Save target skill
     await this.repository.save(target);
-
-    // Delete source skill
     await this.repository.remove(source);
 
     return target;
@@ -184,7 +176,7 @@ export class SkillService extends BaseService<Skill> {
     if (!skill) {
       throw new ValidationError('Skill not found');
     }
-    
+
     if (!skill.metadata?.relatedSkills?.length) {
       return [];
     }
@@ -203,10 +195,10 @@ export class SkillService extends BaseService<Skill> {
     if (!skill) {
       throw new ValidationError('Skill not found');
     }
-    
+
     skill.assessmentCriteria = criteria;
     skill.updatedAt = new Date();
 
     return this.repository.save(skill);
   }
-} 
+}
