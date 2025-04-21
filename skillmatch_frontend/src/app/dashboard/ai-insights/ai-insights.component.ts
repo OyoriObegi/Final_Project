@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { JobService } from '../../services/job.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -17,7 +18,8 @@ import { AuthService } from '../../services/auth.service';
     MatIconModule,
     MatProgressBarModule,
     MatChipsModule,
-    MatCardModule
+    MatCardModule,
+    MatTooltipModule
   ],
   template: `
     <div class="ai-insights">

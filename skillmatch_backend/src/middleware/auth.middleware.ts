@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, UserRole } from '../entities/User';
+import { UserRole } from '../entities/User';
 import { AuthenticationError, AuthorizationError } from './error.middleware';
 import { config } from '../config';
 import AppDataSource from '../config/database';
 
-interface JwtPayload {
-  id: string;
-  role: UserRole;
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export interface AuthenticatedRequest extends Request {
-  user?: User;
+  user?: {
+    id: string;
+    role: UserRole;
+  };
 }
 
 export const authenticate = async (
@@ -21,22 +21,21 @@ export const authenticate = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AuthenticationError('No token provided');
+    if (!authHeader) {
+      throw new AuthenticationError('No authorization header');
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
-
-    const user = await AppDataSource.getRepository(User).findOne({
-      where: { id: decoded.id }
-    });
-
-    if (!user) {
-      throw new AuthenticationError('User not found');
+    if (!token) {
+      throw new AuthenticationError('No token provided');
     }
 
-    req.user = user;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as {
+      id: string;
+      role: UserRole;
+    };
+
+    req.user = decoded;
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
@@ -47,14 +46,16 @@ export const authenticate = async (
   }
 };
 
-export const authorize = (...roles: UserRole[]) => {
+export const authorize = (roles: UserRole[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      throw new AuthenticationError('User not found');
+      return next(new AuthenticationError('User not authenticated'));
     }
 
     if (!roles.includes(req.user.role)) {
-      throw new AuthorizationError('Insufficient permissions');
+      return next(
+        new AuthorizationError('User not authorized to perform this action')
+      );
     }
 
     next();
@@ -67,11 +68,13 @@ export const isRecruiterOrEmployer = (
   next: NextFunction
 ) => {
   if (!req.user) {
-    throw new AuthenticationError('User not found');
+    return next(new AuthenticationError('User not authenticated'));
   }
 
-  if (req.user.role !== UserRole.RECRUITER && req.user.role !== UserRole.ADMIN) {
-    throw new AuthorizationError('Must be a recruiter or admin to access this resource');
+  if (![UserRole.RECRUITER, UserRole.EMPLOYER].includes(req.user.role)) {
+    return next(
+      new AuthorizationError('Only recruiters and employers can perform this action')
+    );
   }
 
   next();
@@ -80,11 +83,13 @@ export const isRecruiterOrEmployer = (
 export const isOwnerOrAdmin = (resourceUserId: string) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      throw new AuthenticationError('User not found');
+      return next(new AuthenticationError('User not authenticated'));
     }
 
     if (req.user.id !== resourceUserId && req.user.role !== UserRole.ADMIN) {
-      throw new AuthorizationError('Insufficient permissions');
+      return next(
+        new AuthorizationError('User not authorized to perform this action')
+      );
     }
 
     next();
@@ -92,7 +97,9 @@ export const isOwnerOrAdmin = (resourceUserId: string) => {
 };
 
 // Predefined middleware for common role checks
-export const isAdmin = authorize(UserRole.ADMIN);
-export const isRecruiter = authorize(UserRole.RECRUITER);
-export const isSeeker = authorize(UserRole.SEEKER);
-export const isRecruiterOrAdmin = authorize(UserRole.RECRUITER, UserRole.ADMIN); 
+export const isAdmin = authorize([UserRole.ADMIN]);
+export const isRecruiter = authorize([UserRole.RECRUITER]);
+export const isSeeker = authorize([UserRole.SEEKER]);
+export const isEmployer = authorize([UserRole.EMPLOYER]);
+
+export const isRecruiterOrAdmin = authorize([UserRole.RECRUITER, UserRole.ADMIN]); 

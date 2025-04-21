@@ -16,8 +16,8 @@ router.get('/:id', jobController.getJob);
 router.use(authenticate);
 
 // Recruiter only routes
-router.post('/', authorize(UserRole.RECRUITER), jobController.createJob);
-router.put('/:id', authorize(UserRole.RECRUITER), jobController.updateJob);
-router.delete('/:id', authorize(UserRole.RECRUITER), jobController.deleteJob);
+router.post('/', authorize([UserRole.RECRUITER]), jobController.createJob);
+router.put('/:id', authorize([UserRole.RECRUITER]), jobController.updateJob);
+router.delete('/:id', authorize([UserRole.RECRUITER]), jobController.deleteJob);
 
 export default router; 
