@@ -1,9 +1,10 @@
-import { getRepository, In } from 'typeorm';
+import { getRepository, In, Repository } from 'typeorm';
 import { Portfolio } from '../entities/Portfolio';
 import { User } from '../entities/User';
 import { Skill } from '../entities/Skill';
 import { BaseService } from './base.service';
 import { NotFoundError, ValidationError } from '../middleware/error.middleware';
+import AppDataSource from '../config/database';
 
 interface CreatePortfolioDTO {
   userId: string;
@@ -65,9 +66,31 @@ interface CreatePortfolioDTO {
 
 interface UpdatePortfolioDTO extends Partial<CreatePortfolioDTO> {}
 
+interface Project {
+  name: string;
+  description: string;
+  url?: string;
+  startDate?: Date;
+  endDate?: Date;
+  skills: string[];
+  highlights?: string[];
+}
+
+interface Certification {
+  name: string;
+  issuer: string;
+  issueDate: Date;
+  expiryDate?: Date;
+  credentialId?: string;
+  url?: string;
+}
+
 export class PortfolioService extends BaseService<Portfolio> {
+  protected repository: Repository<Portfolio>;
+
   constructor() {
     super(getRepository(Portfolio));
+    this.repository = AppDataSource.getRepository(Portfolio);
   }
 
   async createPortfolio(data: CreatePortfolioDTO): Promise<Portfolio> {
@@ -167,7 +190,7 @@ export class PortfolioService extends BaseService<Portfolio> {
     return portfolio;
   }
 
-  async addProject(portfolioId: string, project: CreatePortfolioDTO['projects'][0]): Promise<Portfolio> {
+  async addProject(portfolioId: string, project: Project): Promise<Portfolio> {
     const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
     
     if (!portfolio) {
@@ -175,7 +198,10 @@ export class PortfolioService extends BaseService<Portfolio> {
     }
 
     const projects = [...(portfolio.projects || []), project];
-    return this.update(portfolioId, { projects });
+    return this.repository.save({
+      ...portfolio,
+      projects
+    });
   }
 
   async addExperience(portfolioId: string, experience: CreatePortfolioDTO['experience'][0]): Promise<Portfolio> {
@@ -200,7 +226,7 @@ export class PortfolioService extends BaseService<Portfolio> {
     return this.update(portfolioId, { education: educations });
   }
 
-  async addCertification(portfolioId: string, certification: CreatePortfolioDTO['certifications'][0]): Promise<Portfolio> {
+  async addCertification(portfolioId: string, certification: Certification): Promise<Portfolio> {
     const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
     
     if (!portfolio) {
@@ -208,7 +234,10 @@ export class PortfolioService extends BaseService<Portfolio> {
     }
 
     const certifications = [...(portfolio.certifications || []), certification];
-    return this.update(portfolioId, { certifications });
+    return this.repository.save({
+      ...portfolio,
+      certifications
+    });
   }
 
   async toggleVisibility(portfolioId: string): Promise<Portfolio> {

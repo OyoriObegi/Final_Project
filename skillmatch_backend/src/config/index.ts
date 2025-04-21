@@ -9,6 +9,8 @@ export const config = {
     // 🔧 Ensure CORS origin is present for frontend connection
     corsOrigin: process.env.ALLOWED_ORIGINS || '*',
   
+    geminiApiKey: process.env.GEMINI_API_KEY || '',
+  
     // ✅ Email config for future use
     emailService: {
       host: process.env.EMAIL_HOST || 'smtp.example.com',

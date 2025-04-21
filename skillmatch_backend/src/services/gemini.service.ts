@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config';
 
+
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: any;

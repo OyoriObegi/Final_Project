@@ -1,68 +1,57 @@
-import { Router } from 'express';
-import { query, validationResult } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
 import { SearchService } from '../services/search.service';
+import { validate } from '../middleware/validation.middleware';
 import { authenticate } from '../middleware/auth.middleware';
 import { checkRole } from '../middleware/role.middleware';
 import { UserRole } from '../entities/User';
+import express from 'express';
 
-const router = Router();
 const searchService = new SearchService();
 
-// Search jobs
-router.get('/jobs', 
-  authenticate,
-  [
-    query('keyword').optional().isString().trim(),
-    query('location').optional().isString().trim(),
-    query('type').optional().isString().trim(),
-    query('experienceLevel').optional().isString().trim()
-  ],
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+export const searchRouter = express.Router();
 
-      const { keyword, location, type, experienceLevel } = req.query;
-      const jobs = await searchService.searchJobs({
-        keyword: keyword as string,
-        location: location as string,
-        type: type as string,
-        experienceLevel: experienceLevel as string
-      });
+// Search jobs
+searchRouter.get(
+  '/jobs',
+  authenticate,
+  validate({
+    query: {
+      keyword: { optional: true, isString: true },
+      location: { optional: true, isString: true },
+      type: { optional: true, isString: true },
+      experienceLevel: { optional: true, isString: true }
+    }
+  }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const jobs = await searchService.searchJobs(req.query);
       res.json(jobs);
     } catch (error) {
       next(error);
     }
-});
+  }
+);
 
 // Search candidates
-router.get('/candidates', 
-  authenticate, 
+searchRouter.get(
+  '/candidates',
+  authenticate,
   checkRole([UserRole.RECRUITER]),
-  [
-    query('skills').optional().isArray(),
-    query('experience').optional().isString().trim(),
-    query('location').optional().isString().trim()
-  ],
-  async (req, res, next) => {
+  validate({
+    query: {
+      skills: { optional: true, isArray: true },
+      experience: { optional: true, isString: true },
+      location: { optional: true, isString: true }
+    }
+  }),
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { skills, experience, location } = req.query;
-      const candidates = await searchService.searchCandidates({
-        skills: skills as string[],
-        experience: experience as string,
-        location: location as string
-      });
+      const candidates = await searchService.searchCandidates(req.query);
       res.json(candidates);
     } catch (error) {
       next(error);
     }
-});
+  }
+);
 
-export default router; 
+export default searchRouter; 

@@ -1,11 +1,12 @@
-import { getRepository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CV } from '../entities/CV';
 import { User } from '../entities/User';
-import { BaseService } from './base.service';
 import { NotFoundError } from '../middleware/error.middleware';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
+import { CreateCVDTO, UpdateCVDTO } from '../dtos/cv.dto';
+import AppDataSource from '../config/database';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -37,13 +38,15 @@ interface ParsedCV {
   certifications?: string[];
 }
 
-export class CVService extends BaseService<CV> {
+export class CVService {
+  protected repository: Repository<CV>;
+
   constructor() {
-    super(getRepository(CV));
+    this.repository = AppDataSource.getRepository(CV);
   }
 
   async uploadCV(data: UploadCVDTO): Promise<CV> {
-    const userRepository = getRepository(User);
+    const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({ where: { id: data.userId } });
 
     if (!user) {
@@ -53,7 +56,8 @@ export class CVService extends BaseService<CV> {
     // Parse CV content
     const parsedData = await this.parseCV(data.file);
 
-    const cv = await this.create({
+    const cv = new CV();
+    Object.assign(cv, {
       user,
       filename: data.file.filename,
       originalName: data.file.originalname,
@@ -71,7 +75,7 @@ export class CVService extends BaseService<CV> {
   }
 
   async deleteCV(cvId: string): Promise<void> {
-    const cv = await this.findById(cvId);
+    const cv = await this.repository.findOne({ where: { id: cvId } });
 
     if (cv) {
       // Delete physical file
@@ -81,7 +85,7 @@ export class CVService extends BaseService<CV> {
         console.error('Error deleting CV file:', error);
       }
 
-      await this.delete(cvId);
+      await this.repository.remove(cv);
     }
   }
 
@@ -146,11 +150,10 @@ export class CVService extends BaseService<CV> {
       throw new NotFoundError('CV not found');
     }
 
+    Object.assign(cv, data);
     cv.aiAnalysis = await this.analyzeCV(cv);
-    return this.repository.save({
-      ...cv,
-      ...data
-    });
+    
+    return this.repository.save(cv);
   }
 
   async getRecommendedJobs(cvId: string): Promise<any[]> {
