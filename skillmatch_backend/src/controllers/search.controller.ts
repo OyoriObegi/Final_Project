@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { query, validationResult } from 'express-validator';
 import { SearchService } from '../services/search.service';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 import { checkRole } from '../middleware/role.middleware';
 import { UserRole } from '../entities/User';
 
@@ -10,7 +10,7 @@ const searchService = new SearchService();
 
 // Search jobs
 router.get('/jobs', 
-  authenticateJWT,
+  authenticate,
   [
     query('keyword').optional().isString().trim(),
     query('location').optional().isString().trim(),
@@ -39,7 +39,7 @@ router.get('/jobs',
 
 // Search candidates
 router.get('/candidates', 
-  authenticateJWT, 
+  authenticate, 
   checkRole([UserRole.RECRUITER]),
   [
     query('skills').optional().isArray(),

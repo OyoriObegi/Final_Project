@@ -98,15 +98,22 @@ export class PortfolioService extends BaseService<Portfolio> {
     return this.repository.save(portfolio);
   }
 
-  async updatePortfolio(portfolioId: string, data: UpdatePortfolioDTO): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
+  async updatePortfolio(id: string, data: UpdatePortfolioDTO): Promise<Portfolio> {
+    const portfolio = await this.repository.findOne({ where: { id } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
 
     if (data.skillIds) {
       const skillRepository = getRepository(Skill);
       portfolio.skills = await skillRepository.findBy({ id: In(data.skillIds) });
     }
 
-    return this.update(portfolioId, data);
+    return this.repository.save({
+      ...portfolio,
+      ...data
+    });
   }
 
   async getPortfolioByUser(userId: string): Promise<Portfolio> {
@@ -161,31 +168,56 @@ export class PortfolioService extends BaseService<Portfolio> {
   }
 
   async addProject(portfolioId: string, project: CreatePortfolioDTO['projects'][0]): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
+    const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
     const projects = [...(portfolio.projects || []), project];
     return this.update(portfolioId, { projects });
   }
 
   async addExperience(portfolioId: string, experience: CreatePortfolioDTO['experience'][0]): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
-    const experiences = [...portfolio.experience, experience];
+    const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
+    const experiences = [...(portfolio.experience || []), experience];
     return this.update(portfolioId, { experience: experiences });
   }
 
   async addEducation(portfolioId: string, education: CreatePortfolioDTO['education'][0]): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
-    const educations = [...portfolio.education, education];
+    const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
+    const educations = [...(portfolio.education || []), education];
     return this.update(portfolioId, { education: educations });
   }
 
   async addCertification(portfolioId: string, certification: CreatePortfolioDTO['certifications'][0]): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
+    const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
     const certifications = [...(portfolio.certifications || []), certification];
     return this.update(portfolioId, { certifications });
   }
 
   async toggleVisibility(portfolioId: string): Promise<Portfolio> {
-    const portfolio = await this.findById(portfolioId);
+    const portfolio = await this.repository.findOne({ where: { id: portfolioId } });
+    
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
     return this.update(portfolioId, { isPublic: !portfolio.isPublic });
   }
 

@@ -139,10 +139,18 @@ export class CVService extends BaseService<CV> {
     };
   }
 
-  async updateCVAnalysis(cvId: string): Promise<CV> {
-    const cv = await this.findById(cvId);
+  async updateCV(id: string, data: UpdateCVDTO): Promise<CV> {
+    const cv = await this.repository.findOne({ where: { id } });
+    
+    if (!cv) {
+      throw new NotFoundError('CV not found');
+    }
+
     cv.aiAnalysis = await this.analyzeCV(cv);
-    return this.repository.save(cv);
+    return this.repository.save({
+      ...cv,
+      ...data
+    });
   }
 
   async getRecommendedJobs(cvId: string): Promise<any[]> {
