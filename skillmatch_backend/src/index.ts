@@ -33,7 +33,7 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Health check (safe to keep here)
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -48,14 +48,18 @@ const startServer = async () => {
     await AppDataSource.initialize();
     console.log('✅ Database connection established');
 
-    // ✅ Register routes *after* DB is ready
-    const initializeSkillRoutes = require('./routes/skill.routes').default;
-    app.use('/api/skills', initializeSkillRoutes());
-
+    // Register routes
+    const skillRoutes = require('./routes/skill.routes').default;
     const applicationRoutes = require('./routes/application.routes').default;
-    app.use('/api/applications', applicationRoutes);
+    const searchRoutes = require('./controllers/search.controller').default;
+    const aiRoutes = require('./controllers/ai.controller').default;
 
-    // ✅ Now attach 404 handler
+    app.use('/api/skills', skillRoutes);
+    app.use('/api/applications', applicationRoutes);
+    app.use('/api/search', searchRoutes);
+    app.use('/api/ai', aiRoutes);
+
+    // 404 handler
     app.use((req, res) => {
       res.status(404).json({
         success: false,
@@ -63,7 +67,7 @@ const startServer = async () => {
       });
     });
 
-    // ✅ Global error handler
+    // Global error handler
     app.use(errorHandler);
 
     const port = config.port || 3000;

@@ -1,52 +1,68 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Router } from 'express';
+import { query, validationResult } from 'express-validator';
 import { SearchService } from '../services/search.service';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { Roles } from '../decorators/roles.decorator';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { checkRole } from '../middleware/role.middleware';
 import { UserRole } from '../entities/User';
 
-@Controller('search')
-@UseGuards(JwtAuthGuard, RolesGuard)
-export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
+const router = Router();
+const searchService = new SearchService();
 
-  @Get('candidates')
-  @Roles(UserRole.EMPLOYER, UserRole.ADMIN)
-  async searchCandidates(
-    @Query('q') query: string
-  ) {
-    const candidates = await this.searchService.searchCandidates(query);
-    return {
-      success: true,
-      data: candidates.map(candidate => ({
-        id: candidate.id,
-        firstName: candidate.firstName,
-        lastName: candidate.lastName,
-        skills: candidate.skills.map(skill => skill.name),
-        experience: candidate.experience,
-        education: candidate.education
-      }))
-    };
-  }
+// Search jobs
+router.get('/jobs', 
+  authenticateJWT,
+  [
+    query('keyword').optional().isString().trim(),
+    query('location').optional().isString().trim(),
+    query('type').optional().isString().trim(),
+    query('experienceLevel').optional().isString().trim()
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-  @Get('skills/related')
-  async getRelatedSkills(
-    @Query('skills') skills: string
-  ) {
-    const skillList = skills.split(',').map(s => s.trim());
-    const relatedSkills = await this.searchService.suggestRelatedSkills(skillList);
-    return {
-      success: true,
-      data: relatedSkills
-    };
-  }
+      const { keyword, location, type, experienceLevel } = req.query;
+      const jobs = await searchService.searchJobs({
+        keyword: keyword as string,
+        location: location as string,
+        type: type as string,
+        experienceLevel: experienceLevel as string
+      });
+      res.json(jobs);
+    } catch (error) {
+      next(error);
+    }
+});
 
-  @Get('skills/popular-combinations')
-  async getPopularSkillCombinations() {
-    const combinations = await this.searchService.getPopularSkillCombinations();
-    return {
-      success: true,
-      data: combinations
-    };
-  }
-} 
+// Search candidates
+router.get('/candidates', 
+  authenticateJWT, 
+  checkRole([UserRole.RECRUITER]),
+  [
+    query('skills').optional().isArray(),
+    query('experience').optional().isString().trim(),
+    query('location').optional().isString().trim()
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { skills, experience, location } = req.query;
+      const candidates = await searchService.searchCandidates({
+        skills: skills as string[],
+        experience: experience as string,
+        location: location as string
+      });
+      res.json(candidates);
+    } catch (error) {
+      next(error);
+    }
+});
+
+export default router; 

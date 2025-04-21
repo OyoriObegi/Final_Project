@@ -1,105 +1,70 @@
-import { Injectable } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ConfigService } from '@nestjs/config';
+import { config } from '../config';
 
-@Injectable()
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: any;
 
-  constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not defined in environment variables');
-    }
-    this.genAI = new GoogleGenerativeAI(apiKey);
+  constructor() {
+    this.genAI = new GoogleGenerativeAI(config.geminiApiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
   }
 
-  async analyzeSkills(skills: string[], jobDescription: string): Promise<any> {
-    const prompt = `
-      Analyze the following skills in relation to the job description:
-      Skills: ${skills.join(', ')}
-      
-      Job Description:
-      ${jobDescription}
-      
-      Please provide:
-      1. A match score (0-100) for how well the skills match the job requirements
-      2. Identify any missing critical skills
-      3. Suggest additional relevant skills that would be beneficial
-      4. Provide specific recommendations for skill improvement
-      
-      Format the response as a JSON object with the following structure:
-      {
-        "matchScore": number,
-        "missingSkills": string[],
-        "additionalSkills": string[],
-        "recommendations": string[]
-      }
-    `;
+  async analyzeCVContent(cvText: string) {
+    const prompt = `Analyze this CV content and provide insights:
+    ${cvText}
+    
+    Please provide:
+    1. Key skills identified
+    2. Years of experience
+    3. Career level
+    4. Strengths
+    5. Areas for improvement
+    6. Suggested roles`;
 
     const result = await this.model.generateContent(prompt);
-    const response = result.response;
-    return JSON.parse(response.text());
+    return result.response.text();
   }
 
-  async generateCareerAdvice(currentSkills: string[], experience: string, careerGoals: string): Promise<any> {
-    const prompt = `
-      Based on the following information, provide career development advice:
-      Current Skills: ${currentSkills.join(', ')}
-      Experience: ${experience}
-      Career Goals: ${careerGoals}
-      
-      Please provide:
-      1. A career development roadmap
-      2. Recommended learning paths
-      3. Potential career transitions
-      4. Industry-specific advice
-      
-      Format the response as a JSON object with the following structure:
-      {
-        "roadmap": string[],
-        "learningPaths": string[],
-        "careerTransitions": string[],
-        "industryAdvice": string
-      }
-    `;
+  async generateJobDescription(params: {
+    title: string;
+    requirements: string[];
+    company: string;
+  }) {
+    const prompt = `Create a professional job description for:
+    Title: ${params.title}
+    Company: ${params.company}
+    Requirements: ${params.requirements.join(', ')}
+    
+    Include:
+    1. Role overview
+    2. Key responsibilities
+    3. Required qualifications
+    4. Preferred qualifications
+    5. Benefits
+    6. Company culture`;
 
     const result = await this.model.generateContent(prompt);
-    const response = result.response;
-    return JSON.parse(response.text());
+    return result.response.text();
   }
 
-  async analyzeTrends(skills: string[]): Promise<any> {
-    const prompt = `
-      Analyze the current market trends for the following skills:
-      ${skills.join(', ')}
-      
-      Please provide:
-      1. Current demand level for each skill
-      2. Future growth potential
-      3. Industry sectors with highest demand
-      4. Salary ranges associated with these skills
-      
-      Format the response as a JSON object with the following structure:
-      {
-        "skillAnalysis": {
-          [skill: string]: {
-            "currentDemand": "High" | "Medium" | "Low",
-            "growthPotential": "High" | "Medium" | "Low",
-            "topIndustries": string[],
-            "salaryRange": {
-              "min": number,
-              "max": number
-            }
-          }
-        }
-      }
-    `;
+  async matchCandidateToJob(cvContent: string, jobDescription: string) {
+    const prompt = `Compare this CV with the job description and provide a detailed match analysis:
+    
+    CV:
+    ${cvContent}
+    
+    Job Description:
+    ${jobDescription}
+    
+    Provide:
+    1. Overall match percentage
+    2. Matching skills
+    3. Missing skills
+    4. Experience match
+    5. Recommendations`;
 
     const result = await this.model.generateContent(prompt);
-    const response = result.response;
-    return JSON.parse(response.text());
+    return result.response.text();
   }
 } 

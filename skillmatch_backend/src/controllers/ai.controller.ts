@@ -1,66 +1,45 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Router } from 'express';
 import { GeminiService } from '../services/gemini.service';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { authenticateJWT } from '../middleware/auth.middleware';
 
-class SkillsAnalysisDto {
-  skills: string[];
-  jobDescription: string;
-}
+const router = Router();
+const geminiService = new GeminiService();
 
-class CareerAdviceDto {
-  currentSkills: string[];
-  experience: string;
-  careerGoals: string;
-}
-
-class TrendAnalysisDto {
-  skills: string[];
-}
-
-@ApiTags('AI')
-@Controller('ai')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
-export class AIController {
-  constructor(private readonly geminiService: GeminiService) {}
-
-  @Post('analyze-skills')
-  @ApiOperation({ summary: 'Analyze skills against job description' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns skills analysis with match score and recommendations',
-  })
-  async analyzeSkills(@Body() dto: SkillsAnalysisDto) {
-    return this.geminiService.analyzeSkills(dto.skills, dto.jobDescription);
+// Analyze CV
+router.post('/analyze-cv', authenticateJWT, async (req, res, next) => {
+  try {
+    const { cvText } = req.body;
+    const analysis = await geminiService.analyzeCVContent(cvText);
+    res.json(analysis);
+  } catch (error) {
+    next(error);
   }
+});
 
-  @Post('career-advice')
-  @ApiOperation({ summary: 'Generate personalized career advice' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns career development roadmap and recommendations',
-  })
-  async generateCareerAdvice(@Body() dto: CareerAdviceDto) {
-    return this.geminiService.generateCareerAdvice(
-      dto.currentSkills,
-      dto.experience,
-      dto.careerGoals,
-    );
+// Generate job description
+router.post('/generate-job-description', authenticateJWT, async (req, res, next) => {
+  try {
+    const { title, requirements, company } = req.body;
+    const description = await geminiService.generateJobDescription({
+      title,
+      requirements,
+      company
+    });
+    res.json({ description });
+  } catch (error) {
+    next(error);
   }
+});
 
-  @Post('analyze-trends')
-  @ApiOperation({ summary: 'Analyze market trends for skills' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns market trend analysis for specified skills',
-  })
-  async analyzeTrends(@Body() dto: TrendAnalysisDto) {
-    return this.geminiService.analyzeTrends(dto.skills);
+// Match candidate to job
+router.post('/match-candidate', authenticateJWT, async (req, res, next) => {
+  try {
+    const { cvContent, jobDescription } = req.body;
+    const match = await geminiService.matchCandidateToJob(cvContent, jobDescription);
+    res.json(match);
+  } catch (error) {
+    next(error);
   }
+});
 
-  @Get('health')
-  async healthCheck() {
-    return { status: 'ok', message: 'AI service is running' };
-  }
-} 
+export default router; 
