@@ -9,6 +9,15 @@ export class SkillController extends BaseController<Skill> {
     super(skillService);
   }
 
+  async getAll(req: Request, res: Response): Promise<void> {
+    try {
+      const skills = await this.service.findAll();
+      res.status(200).json(skills);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch skills', error });
+    }
+  }
+
   createSkill = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const skill = await this.skillService.createSkill(req.body);
@@ -123,4 +132,4 @@ export class SkillController extends BaseController<Skill> {
       next(error);
     }
   };
-} 
+}

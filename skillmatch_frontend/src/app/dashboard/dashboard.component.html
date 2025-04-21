@@ -27,6 +27,9 @@
         <li class="nav-item" *ngIf="userRole === 'jobseeker'">
           <a class="nav-link" routerLink="/dashboard/my-applications" routerLinkActive="active">My Applications</a>
         </li>
+        <li class="nav-item" *ngIf="userRole === 'jobseeker'">
+          <a class="nav-link" routerLink="/dashboard/ai-insights" routerLinkActive="active">AI Career Insights</a>
+        </li>
         <li class="nav-item" *ngIf="userRole === 'employer'">
           <a class="nav-link" routerLink="/dashboard/post-job" routerLinkActive="active">Post Job</a>
         </li>

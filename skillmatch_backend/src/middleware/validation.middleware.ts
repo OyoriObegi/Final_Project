@@ -12,8 +12,8 @@ export const validate = (validations: ValidationChain[]) => {
     }
 
     const errorMessages = errors.array().map(err => ({
-      field: err.param,
-      message: err.msg
+      field: (err as any).param,
+      message: (err as any).msg
     }));
 
     throw new ValidationError(JSON.stringify(errorMessages));

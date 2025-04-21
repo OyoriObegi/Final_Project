@@ -392,14 +392,19 @@ export class JobDetailsComponent implements OnInit {
   }
 
   applyForJob(): void {
-    if (!this.job) return;
+    const jobId = this.job?.id;
+    if (!jobId) return;
 
-    this.isAuthenticated$.subscribe(isAuthenticated => {
-      if (!isAuthenticated) {
-        this.navigateToLogin();
-        return;
+    this.jobService.applyToJob(jobId, this.application.coverLetter).subscribe({
+      next: () => {
+        alert('Application submitted successfully!');
+        this.application.coverLetter = '';
+        this.showApplicationForm = false;
+      },
+      error: (err) => {
+        console.error('Application error:', err);
+        alert('Something went wrong. Please try again.');
       }
-      this.showApplicationForm = true;
     });
   }
 

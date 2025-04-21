@@ -7,6 +7,7 @@ export class BaseService<T extends ObjectLiteral> {
   async findAll(): Promise<T[]> {
     return this.repository.find();
   }
+  
 
   async findById(id: string): Promise<T | null> {
     return this.repository.findOne({ where: { id } as any });

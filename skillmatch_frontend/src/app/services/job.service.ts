@@ -65,6 +65,12 @@ export class JobService {
     return this.http.get<JobPosting[]>(`${this.apiUrl}/jobs/recommended/${userId}`);
   }
 
+  applyToJob(jobId: string, coverLetter: string): Observable<any> {
+    const token = localStorage.getItem('token'); // ensure token is stored after login
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.post(`${this.apiUrl}/applications`, { jobId, coverLetter }, { headers });
+  }
+
   private buildQueryParams(filters: JobFilters): { [key: string]: string } {
     const params: { [key: string]: string } = {};
     

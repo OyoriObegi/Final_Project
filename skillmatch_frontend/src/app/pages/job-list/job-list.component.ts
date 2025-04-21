@@ -1,17 +1,31 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { FooterComponent } from '../../shared/footer/footer.component';
 
 @Component({
   selector: 'app-job-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    NavbarComponent,
+    FooterComponent
+  ],
   templateUrl: './job-list.component.html',
   styleUrls: ['./job-list.component.scss']
 })
 export class JobListComponent {
+  showForm = false;
+  applicant = {
+    name: '',
+    email: '',
+    coverLetter: ''
+  };
+
   jobs = [
     {
       id: 1,
@@ -19,21 +33,18 @@ export class JobListComponent {
       company: 'TechSavvy Inc.',
       location: 'Remote',
       tags: ['Angular', 'TypeScript', 'UI/UX'],
-    },
-    {
-      id: 2,
-      title: 'Data Analyst',
-      company: 'Insights Corp.',
-      location: 'Nairobi, Kenya',
-      tags: ['Python', 'SQL', 'Tableau'],
-    },
-    {
-      id: 3,
-      title: 'Machine Learning Engineer',
-      company: 'AIWorks',
-      location: 'Hybrid - Nairobi',
-      tags: ['ML', 'TensorFlow', 'Python'],
+      jobDescription: 'We are looking for a frontend developer with solid Angular experience...'
     }
+    // Add more jobs here
   ];
 
+  get job() {
+    return this.jobs[0];
+  }
+
+  onApply(): void {
+    console.log('Application submitted:', this.applicant);
+    this.applicant = { name: '', email: '', coverLetter: '' };
+    this.showForm = false;
+  }
 }

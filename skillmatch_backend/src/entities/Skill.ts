@@ -9,8 +9,20 @@ import {
 import { User } from './User';
 import { Job } from './Job';
 
-export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
-export type SkillType = 'technical' | 'soft' | 'language' | 'certification' | 'tool';
+export enum SkillLevel {
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced',
+  EXPERT = 'expert'
+}
+
+export enum SkillType {
+  TECHNICAL = 'technical',
+  SOFT = 'soft',
+  LANGUAGE = 'language',
+  CERTIFICATION = 'certification',
+  TOOL = 'tool'
+}
 
 @Entity('skills')
 export class Skill {
@@ -28,8 +40,8 @@ export class Skill {
 
   @Column({
     type: 'enum',
-    enum: ['technical', 'soft', 'language', 'certification', 'tool'],
-    default: 'technical'
+    enum: SkillType,
+    default: SkillType.TECHNICAL
   })
   type: SkillType;
 
@@ -92,4 +104,4 @@ export class Skill {
 
   @Column({ type: 'uuid', nullable: true })
   verifiedBy: string;
-} 
+}

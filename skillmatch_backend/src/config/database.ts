@@ -22,7 +22,8 @@ const AppDataSource = new DataSource({
   entities: [User, Job, JobApplication, Skill, Application, Portfolio, CV],
 
   // ✅ Turn off auto schema sync to avoid destructive changes
-  synchronize: false,  // Use migrations instead of auto sync
+  synchronize: true,
+  dropSchema: false,  // Use migrations instead of auto sync
   migrationsRun: true, // Automatically run migrations on startup
 
   // ✅ Logging only in development

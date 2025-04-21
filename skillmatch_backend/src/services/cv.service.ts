@@ -73,14 +73,16 @@ export class CVService extends BaseService<CV> {
   async deleteCV(cvId: string): Promise<void> {
     const cv = await this.findById(cvId);
 
-    // Delete physical file
-    try {
-      await unlinkAsync(cv.path);
-    } catch (error) {
-      console.error('Error deleting CV file:', error);
-    }
+    if (cv) {
+      // Delete physical file
+      try {
+        await unlinkAsync(cv.path);
+      } catch (error) {
+        console.error('Error deleting CV file:', error);
+      }
 
-    await this.delete(cvId);
+      await this.delete(cvId);
+    }
   }
 
   async getCVsByUser(userId: string): Promise<CV[]> {

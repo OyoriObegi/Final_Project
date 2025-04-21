@@ -32,8 +32,8 @@ interface UpdateProfileDTO {
 }
 
 export class UserService extends BaseService<User> {
-  constructor() {
-    super(AppDataSource.getRepository(User));
+  constructor(dataSource = AppDataSource) {
+    super(dataSource.getRepository(User));
   }
 
   async register(data: RegisterDTO): Promise<User> {

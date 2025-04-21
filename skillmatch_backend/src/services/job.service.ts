@@ -43,9 +43,9 @@ interface JobSearchParams {
 export class JobService extends BaseService<Job> {
   private jobApplicationRepository: Repository<JobApplication>;
 
-  constructor() {
-    super(AppDataSource.getRepository(Job));
-    // Initialize jobApplicationRepository in the actual implementation
+  constructor(dataSource = AppDataSource) {
+    super(dataSource.getRepository(Job));
+    this.jobApplicationRepository = dataSource.getRepository(JobApplication);
   }
 
   async createJob(jobData: Partial<Job>): Promise<Job> {

@@ -1,4 +1,4 @@
-import { getRepository } from 'typeorm';
+import AppDataSource from '../config/database';
 import { Application, ApplicationStatus } from '../entities/Application';
 import { User } from '../entities/User';
 import { Job } from '../entities/Job';
@@ -35,13 +35,13 @@ interface ApplicationSearchParams {
 }
 
 export class ApplicationService extends BaseService<Application> {
-  constructor() {
-    super(getRepository(Application));
+  constructor(dataSource = AppDataSource) {
+    super(dataSource.getRepository(Application));
   }
 
   async createApplication(data: CreateApplicationDTO): Promise<Application> {
-    const userRepository = getRepository(User);
-    const jobRepository = getRepository(Job);
+    const userRepository = this.repository.manager.getRepository(User);
+    const jobRepository = this.repository.manager.getRepository(Job);
 
     const [applicant, job] = await Promise.all([
       userRepository.findOne({ where: { id: data.applicantId } }),
@@ -88,6 +88,10 @@ export class ApplicationService extends BaseService<Application> {
     data: UpdateApplicationDTO
   ): Promise<Application> {
     const application = await this.findById(applicationId);
+
+    if (!application) {
+      throw new NotFoundError('Application not found');
+    }
 
     if (data.status) {
       application.lastStatusChangeAt = new Date();

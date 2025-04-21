@@ -52,6 +52,9 @@ const startServer = async () => {
     const initializeSkillRoutes = require('./routes/skill.routes').default;
     app.use('/api/skills', initializeSkillRoutes());
 
+    const applicationRoutes = require('./routes/application.routes').default;
+    app.use('/api/applications', applicationRoutes);
+
     // ✅ Now attach 404 handler
     app.use((req, res) => {
       res.status(404).json({
