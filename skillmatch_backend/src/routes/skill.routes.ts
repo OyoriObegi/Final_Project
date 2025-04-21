@@ -1,28 +1,13 @@
 import { Router } from 'express';
-import { isAdmin } from '../middleware/auth.middleware';
+import { SkillController } from '../controllers/skill.controller';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
+const skillController = new SkillController();
 
-export default function initializeSkillRoutes() {
-  const SkillController = require('../controllers/skill.controller').SkillController;
-  const skillController = new SkillController();
+router.get('/', authenticate, skillController.getAll);
+router.post('/', authenticate, skillController.create);
+router.put('/:id', authenticate, skillController.update);
+router.delete('/:id', authenticate, skillController.delete);
 
-  // 🆕 List all skills
-  router.get('/', skillController.getAll.bind(skillController));
-
-  // Public routes
-  router.get('/search', skillController.searchSkills);
-  router.get('/popular', skillController.getPopularSkills);
-  router.get('/:id', skillController.getById);
-  router.get('/:id/stats', skillController.getSkillStats);
-  router.get('/:id/related', skillController.suggestRelatedSkills);
-
-  // Admin routes
-  router.post('/', isAdmin, skillController.createSkill);
-  router.put('/:id/metadata', isAdmin, skillController.updateSkillMetadata);
-  router.put('/:id/verify', isAdmin, skillController.verifySkill);
-  router.put('/:id/assessment', isAdmin, skillController.updateAssessmentCriteria);
-  router.post('/merge', isAdmin, skillController.mergeSkills);
-
-  return router;
-}
+export default router;

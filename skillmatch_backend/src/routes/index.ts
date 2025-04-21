@@ -4,7 +4,7 @@ import jobRoutes from './job.routes';
 import skillRoutes from './skill.routes';
 import applicationRoutes from './application.routes';
 
-const router = Router();
+const router: Router = Router();
 
 // Health check route
 router.get('/health', (req, res) => {
@@ -12,9 +12,9 @@ router.get('/health', (req, res) => {
 });
 
 // API routes
-router.use('/api/users', userRoutes);
-router.use('/api/jobs', jobRoutes);               // auth handled inside route
-router.use('/api/skills', skillRoutes);           // auth handled inside route
-router.use('/api/applications', applicationRoutes); // already has auth inside
+router.use('/api/users', userRoutes as Router);
+router.use('/api/jobs', jobRoutes as Router);               // auth handled inside route
+router.use('/api/skills', skillRoutes as Router);           // auth handled inside route
+router.use('/api/applications', applicationRoutes as Router); // already has auth inside
 
 export default router;

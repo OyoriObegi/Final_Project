@@ -21,7 +21,7 @@ searchRouter.get(
       type: { optional: true, isString: true },
       experienceLevel: { optional: true, isString: true }
     }
-  }),
+  }) as express.RequestHandler,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const jobs = await searchService.searchJobs(req.query);
@@ -43,7 +43,7 @@ searchRouter.get(
       experience: { optional: true, isString: true },
       location: { optional: true, isString: true }
     }
-  }),
+  }) as express.RequestHandler,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const candidates = await searchService.searchCandidates(req.query);
